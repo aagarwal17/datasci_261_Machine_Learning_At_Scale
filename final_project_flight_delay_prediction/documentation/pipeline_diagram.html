@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pipeline Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: relative;
+        }
+        
+        .phase {
+            background: white;
+            border-radius: 15px;
+            padding: 25px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .phase:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .phase-header {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid;
+        }
+        
+        .phase-content {
+            font-size: 0.95em;
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .phase-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .phase-content li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .phase-content li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: inherit;
+            font-weight: bold;
+        }
+        
+        .feature-category {
+            margin: 10px 0;
+        }
+        
+        .feature-category strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 3px;
+        }
+        
+        .feature-list {
+            padding-left: 20px;
+            color: #555;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for each phase */
+        .raw-data {
+            background: linear-gradient(135deg, #e1f5ff 0%, #d4e8f7 100%);
+            border-left: 6px solid #0077b6;
+        }
+        .raw-data .phase-header {
+            color: #0077b6;
+            border-bottom-color: #0077b6;
+        }
+        
+        .phase1 {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d9ecf5 100%);
+            border-left: 6px solid #4a90e2;
+        }
+        .phase1 .phase-header {
+            color: #4a90e2;
+            border-bottom-color: #4a90e2;
+        }
+        
+        .phase2 {
+            background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%);
+            border-left: 6px solid #ff9800;
+        }
+        .phase2 .phase-header {
+            color: #ff9800;
+            border-bottom-color: #ff9800;
+        }
+        
+        .phase3 {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 6px solid #9c27b0;
+        }
+        .phase3 .phase-header {
+            color: #9c27b0;
+            border-bottom-color: #9c27b0;
+        }
+        
+        .phase4 {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 6px solid #4caf50;
+        }
+        .phase4 .phase-header {
+            color: #4caf50;
+            border-bottom-color: #4caf50;
+        }
+        
+        .phase5 {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border-left: 6px solid #fbc02d;
+        }
+        .phase5 .phase-header {
+            color: #fbc02d;
+            border-bottom-color: #fbc02d;
+        }
+        
+        .model-ready {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left: 6px solid #28a745;
+            text-align: center;
+        }
+        .model-ready .phase-header {
+            color: #28a745;
+            border-bottom-color: #28a745;
+            border-bottom: none;
+            font-size: 1.6em;
+        }
+        
+        /* Arrow connector */
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 25px solid #ddd;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .arrow::before {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 15px;
+            background: #ddd;
+            top: -40px;
+            left: -1.5px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 20px;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .phase:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Pipeline Workflow</h1>
+        
+        <div class="pipeline">
+            <!-- Raw Data -->
+            <div class="phase raw-data">
+                <div class="phase-header">RAW DATA</div>
+                <div class="phase-content">
+                    <ul>
+                        <li>Flights</li>
+                        <li>Airport Codes</li>
+                        <li>Weather (NOAA)</li>
+                        <li>Station Metadata</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Phase 1 -->
+            <div class="phase phase1">
+                <div class="phase-header">PHASE 1: JOINED DATA</div>
+                <div class="phase-content">
+                    <ul>
+                        <li>Created unified airport dimension with timezones & coordinates</li>
+                        <li>Built weather station dimension with geolocation</li>
+                        <li>Linked airports to nearest weather stations (top 3)</li>
+                        <li>Aligned flight times (local → UTC) for weather matching</li>
+                        <li>Generated enriched views with origin/destination weather</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Phase 2 -->
+            <div class="phase phase2">
+                <div class="phase-header">PHASE 2: DATA CLEANING</div>
+                <div class="phase-content">
+                    <ul>
+                        <li>Type casting & standardization</li>
+                        <li>Removed duplicates, canceled/diverted flights</li>
+                        <li>Handled missing values (median imputation)</li>
+                        <li>Dropped leakage features</li>
+                        <li>Converted target to binary</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Phase 3 -->
+            <div class="phase phase3">
+                <div class="phase-header">PHASE 3: FEATURE ENGINEERING</div>
+                <div class="phase-content">
+                    <div class="feature-category">
+                        <strong>Temporal:</strong>
+                        <div class="feature-list">Hour, Day, Month, Season, Day-Hour Interaction, Holiday Window, Cyclic Encoding</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Flight Volume:</strong>
+                        <div class="feature-list">Daily Origin Volume, Rolling 24h/30-Day Volume, Route-Specific Volume, Airport Hourly Traffic Density</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Historical Performance:</strong>
+                        <div class="feature-list">1-Year Historical Delay Rates, Prior Day Delay Rate, Same-Day Prior Flight Performance, Historical Congestion Patterns</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Aircraft:</strong>
+                        <div class="feature-list">Lag-Based Features (Previous Flight Performance)</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Congestion:</strong>
+                        <div class="feature-list">2-Hour Window Airport Congestion</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Weather:</strong>
+                        <div class="feature-list">Severity Score, Distance Features, Extreme Weather Indicators, Weighted Weather Score, Heat Index, Rapid Weather Changes, Seasonal Anomalies, Binary Rain Indicator, Sky Conditions Parsed</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Route/Network:</strong>
+                        <div class="feature-list">Log-Transformed Distance, Airport Degree Centrality, PageRank, Carrier Quality Statistics, Carrier Flight Frequency</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Phase 4 -->
+            <div class="phase phase4">
+                <div class="phase-header">PHASE 4: FEATURE SELECTION</div>
+                <div class="phase-content">
+                    <ul>
+                        <li>Correlation analysis (feature-feature & feature-target)</li>
+                        <li>Removed highly correlated pairs (>0.95)</li>
+                        <li>ANOVA, Chi-squared, Pearson/Spearman tests</li>
+                        <li>Cardinality analysis & encoding recommendations</li>
+                        <li>Removed redundant & problematic features</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Phase 5 -->
+            <div class="phase phase5">
+                <div class="phase-header">PHASE 5: DATA READINESS FOR MODEL</div>
+                <div class="phase-content">
+                    <div class="feature-category">
+                        <strong>Scaling:</strong>
+                        <div class="feature-list">Min-max normalization, robust scaling, standard scaler (training data only)</div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Encoding:</strong>
+                        <div class="feature-list">
+                            • One-hot: 8 features → 33 dummies<br>
+                            • Target encoding: 6 high-cardinality features
+                        </div>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <strong>Class Balance:</strong>
+                        <div class="feature-list">Undersampled majority class (~80% on-time → balanced)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow"></div>
+            
+            <!-- Model Ready -->
+            <div class="phase model-ready">
+                <div class="phase-header">✓ MODEL-READY DATA</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

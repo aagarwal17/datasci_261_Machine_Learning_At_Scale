@@ -1,0 +1,93 @@
+PRESENTATION STATISTICS - DATASET REFERENCE
+===========================================
+
+The collect_presentation_stats.py script will analyze the following datasets:
+
+1. RAW OTPW DATA (12 Months, 2019)
+   Path: dbfs:/mnt/mids-w261/OTPW_12M
+   Description: Original raw flight data for 12 months of 2019
+   Note: This stage is optional - script continues if not available
+
+2. JOINED DATA (Airline + Weather)
+   Path: dbfs:/student-groups/Group_4_4/JOINED_1Y_2019.parquet
+   Description: Combined airline and weather data before any cleaning
+
+3. CLEANED DATA (After Cleaning & Imputation)
+   Path: dbfs:/student-groups/Group_4_4/joined_1Y_clean_imputed.parquet
+   Description: After removing cancelled/diverted flights, handling nulls, and imputation
+
+4. FEATURE ENGINEERED DATA (Intermediate)
+   Path: dbfs:/student-groups/Group_4_4/joined_1Y_feat.parquet
+   Description: After adding engineered features (temporal, rolling averages, etc.)
+
+5. FINAL FEATURE SET (Ready for Modeling)
+   Path: dbfs:/student-groups/Group_4_4/joined_1Y_final_feature_clean.parquet
+   Description: Final cleaned dataset with all features, ready for model training
+
+
+STATISTICS COLLECTED
+====================
+
+For Each Stage:
+- Total rows and columns
+- Delay rate (% of flights delayed ≥15 minutes)
+- Changes from previous stage
+
+Summary Metrics for Presentation:
+- Data scale progression (how many rows at each stage)
+- Class imbalance ratio (on-time vs delayed)
+- Feature engineering impact (features added)
+- Data quality improvements (rows/columns removed, nulls handled)
+- Dataset characteristics (time period, data sources, prediction task)
+
+
+OUTPUT FILES
+============
+
+The script will create:
+1. Console output with formatted statistics
+2. CSV file: /dbfs/student-groups/Group_4_4/presentation_statistics.csv
+3. In-memory dictionary: 'stats' variable for further analysis
+
+
+USAGE IN DATABRICKS
+====================
+
+# Option 1: Run the entire script
+%run /path/to/collect_presentation_stats.py
+
+# Option 2: Copy-paste into a cell and run directly
+
+# Option 3: Import and use the stats dictionary
+%run /path/to/collect_presentation_stats.py
+print(stats['final']['delay_rate'])  # Access specific statistics
+
+
+KEY METRICS FOR PRESENTATION TALK TRACK
+========================================
+
+The script will automatically format and display:
+
+1. DATA SCALE
+   - Starting rows and ending rows
+   - Percentage of data cleaned/removed
+   
+2. CLASS BALANCE
+   - On-time percentage vs delayed percentage
+   - Imbalance ratio (e.g., 3:1)
+   
+3. FEATURE ENGINEERING
+   - Original column count
+   - Features added
+   - Final feature count
+   
+4. DATA QUALITY
+   - Rows removed during cleaning
+   - Null handling strategy
+   - Data integrity level
+   
+5. DATASET CHARACTERISTICS
+   - Time period covered
+   - Data sources used
+   - Prediction task definition
+   - Target variable description

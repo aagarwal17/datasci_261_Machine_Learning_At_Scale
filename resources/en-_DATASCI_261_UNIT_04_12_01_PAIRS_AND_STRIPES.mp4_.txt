@@ -1,0 +1,187 @@
+Pairs and stripes. So with the
+fundamentals covered, let's revisit some design
+patterns we learned in Hadoop and go one step
+further looking at how we can utilize smart data
+structures to design even more efficient algorithms. We'll take our word
+count to the next level by calculating not just
+single words, but pairs of words that occur together. In other words,
+co-occurring terms. Later, we'll see how we can
+leverage this new knowledge to build an inverted
+index, a fundamental data structure in the domain
+of information retrieval. We'll use these
+patterns in homework to do synonym detection. OK, we're going to continue
+our discussion here around synchronization
+in streams. Previously, we've looked at some
+pretty straightforward examples of this where we synchronized
+around a particular customer ID. And we got the average
+amount spent by the customer. Now, let's up the
+ante and explore more challenging examples,
+which are more combinatorially explosive before synchronizing
+down to a solution space. So one common approach
+for synchronization in a MapReduce-style
+framework is to construct complex keys
+and values in such a way that the data necessary
+for computation are naturally brought together
+by the execution framework. We first touched
+on this technique last week in terms
+of packaging together partial sums and counts in
+a complex value or pair that is passed from the mapper to
+the combiner to the reducer. Now, let's look at an example
+of market basket analysis. Here, if I'm a shop owner, I'm
+interested in the buying habits of-- or patterns of customers. And this is very much part
+of the data mining field. We're always looking
+for patterns. We're always looking
+for correlations. And sometimes, we
+leverage these patterns to make our business
+more optimal. So for example, we might
+co-locate the diapers and beer on the same aisle
+because on Friday night, we've observed that people
+generally buy beer and diapers on their way home from work. And that, by the
+way, is an urban myth and doesn't actually happen. Just an example. OK, so what we're looking at
+here is a co-occurrence matrix. We're looking at where
+events of items co-occur. In this case, we're
+looking at where two items are in the same
+basket of a customer. So effectively, what
+we're doing here is we're building a
+square matrix which looks at, say, orange juice. And we're saying, how
+many baskets were there where a customer bought
+orange juice and window cleaner together? So we have orange juice
+and window cleaner. And it turns out we've
+got one such customer. So similarly, we can look
+at window cleaner and soda. So window cleaner and soda. And again, there's one customer
+that bought window cleaner and soda together. So this is our
+co-occurrence matrix for market basket
+analysis, and it has a symmetric relationship. Now, this also happens to
+be a very important concept in natural language
+processing, where we might be looking at
+term co-occurrence or word co-occurrences. We want to see, where
+do words co-occur? And this can be very
+useful in practice in determining the meaning or
+semantics of a particular word or phrase. So here we construct this
+co-occurrence matrix. This is a little bit different
+to the basket analysis from the previous example. The idea here is that we might
+have a corpus of, let's say, a bunch of letters,
+here in this case a highly contrived example. And we might look at
+co-occurrence being defined as words that co-occur
+in a window of size 2 on either side of a
+particular word of interest. So for example, if you
+look at the first word A, then it occurs with D,
+and then it occurs with C. And in our process to generate
+this co-occurrence matrix, we're going to basically
+window across the corpus, constructing these
+co-occurrence instances. And then we're going
+to update our counters in the co-occurrence matrix. So for example, we will update
+the count of AD initially. Then we'll take the next
+co-occurring pair AC. So I'll just go up here. AD. The next pair is AC. And we'll keep windowing
+across the corpus until we will come to the end. And so the last update
+from this corpus will be the
+co-occurrence of E and D. And we can see that
+for D and E, they co-occur at a frequency
+of 4, so E then D. There's no particular
+order associated with the terms in the corpus. So this is a symmetric
+relationship. But sometimes, we might
+have the requirement that the first word is
+always the first word. So for example, having
+a word pair like the dog is not the same as dog the. And next, we'll
+want to explore how we could build such a matrix
+at scale over a large text collection. So the reasons for building
+this type of co-current matrix are many. But as I alluded to earlier,
+by having these distribution profiles, they can be used to
+measure semantic similarity or semantic distance
+between concepts. And this is a very useful notion
+in natural language processing. So how can you do this at scale? Clearly, we're going to
+have a combinatorial event space and a large
+number of observations. And this is the sort of thing
+that a framework like Spark is really good at. So the big question here is,
+what do our transformations and actions look like? We've already seen that the term
+co-occurrence matrix for a text collection is a
+large event space. It's basically a square matrix. And it's very sparse. And basically, what
+we do is build up this matrix using mapping and
+aggregating transformations. So as you can imagine, we
+can do this as follows. We can take a particular
+stream of key value pairs. In this case, the key could
+be a document or sentence ID. And the value could be the
+document or sentence string. Let's assume that we're
+doing co-occurrence defined by the
+terms co-occurring in the same sentence. You can imagine that a
+natural map or task here is to window over the
+input documents string, emitting pairs of tokens
+that co-occur as we have defined previously. So we have a document ABCAC. And we're going to emit the
+following pairs of tokens in a count of one. So AB is the first token that
+co-occurs with a count of one. BC-- or AC, so A
+and C. So basically, all of the combinations of
+tokens with a count of 1. And then we'll sum up all
+of these pairs in a reducer. And lucky for us, Spark
+will do some combining automatically whenever possible. So the pseudocode
+looks like this. Essentially, what
+we're doing here is that the mapper
+processes each document and emits intermediate
+key value pairs for each co-occurring word pair
+as the key and an integer of 1 as the value. This is accomplished
+by two nested loops. The outer loop iterates
+over all the words. And the inner loop iterates over
+all the neighbors of each word, so all the co-occurring
+terms for each word in the line of words that
+is passed into our mapper. And then we're going
+to emit into the stream the word, the neighbor,
+and a count of one for all combinations. Our reducer reduces by key. So the key here is a
+complex key of word-- of two words. So it's going to count
+up all of these pairs. Add up all the counts
+of all these pairs. So that's the pairs approach. It has some advantages
+and disadvantages. It's easy to implement. It's relatively
+easy to understand. However, on the flip side,
+the biggest disadvantage here is that we're emitting
+a ton of key value pairs into the stream, shuffling a
+lot of data around the network. As you know, that can be
+computationally expensive. So instead of emitting
+all possible pairs, let's see what happens if
+we take a stripes approach. The input to the mapper
+is a sentence as before. This time the mapper
+emits an associative array where the key is a
+term, and the array holds the key value
+pairs where each key is a term which co-occurs with
+the primary key and the values are the count. So we're going to keep
+a dictionary in memory, an associative array. We're going to keep
+all of the neighbors. This time the primary
+key here is A. And all the neighbors are
+inside of our associative array with the counts of
+their co-occurrences. B co-occurs with A once,
+C co-occurs with A twice, et cetera. We're going to emit this
+entire stripe into the stream. The reducers can then aggregate
+these associative arrays by doing element-wise
+summations for each primary key. So if the reducer receives
+this associative array and this associative
+array, it can add values for each
+internal key element-wise. And again, here's the pseudocode
+for the stripes approach. We still have an outer loop and
+an inner loop in the map phase. But this time, we're
+accumulating a dictionary in order to emit
+the entire stripe at the end of the outer loop. So here we're-- instead of
+just the word pairs and counts, we're emitting just the word
+and an entire associative array of all of the
+neighbors and counts. The main advantage
+here is that we are shuffling a lot less data. And by using reduce
+by key, we're giving Spark an opportunity
+to do some combining for us behind the scenes. On the flip side, we're limited
+in terms of the event space. So in other words, we cannot
+afford to make our associative arrays larger than will fit
+in memory on a single machine. So which is faster,
+stripes or pairs? The chart presented
+here is from experiments on a Hadoop cluster
+with 19 slaves, each with two single core
+processors and two disks. More information can be found
+on this in the Lin and Dyer book in chapter 3. However, we can see that
+the stripes approach, the bottom line is much faster. And it doesn't grow as
+quickly as the pairs approach. So here's our running time
+on the y-axis and number of observations. And we can see that the running
+time for the stripes approach-- or sorry-- for
+the pairs approach increases quite quickly. Whereas the stripes
+approach, the running time stays relatively low. This is the MapReduce
+Hadoop implementation. We can assume that the Spark
+implementation will be similar, but it's still interesting
+to see a similar experiment conducted for the
+Spark implementation exercise for the reader. In summary, the stripes
+approach is faster, but we have to be mindful
+of managing memory. The pairs has more
+partition and sort overhead, but can handle data with
+potentially large skew.

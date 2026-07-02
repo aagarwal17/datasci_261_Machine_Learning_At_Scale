@@ -1,0 +1,130 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="planeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.3" />
+    </linearGradient>
+    
+    <!-- Subtle grid pattern -->
+    <pattern id="gridPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  
+  <!-- Sky Background -->
+  <rect width="1920" height="1080" fill="url(#skyGradient)"/>
+  
+  <!-- Subtle Grid Overlay -->
+  <rect width="1920" height="1080" fill="url(#gridPattern)"/>
+  
+  <!-- Clouds - Background Layer -->
+  <ellipse cx="300" cy="200" rx="180" ry="60" fill="url(#cloudGradient)"/>
+  <ellipse cx="250" cy="220" rx="150" ry="50" fill="url(#cloudGradient)"/>
+  <ellipse cx="350" cy="210" rx="140" ry="55" fill="url(#cloudGradient)"/>
+  
+  <ellipse cx="1500" cy="150" rx="200" ry="65" fill="url(#cloudGradient)"/>
+  <ellipse cx="1450" cy="170" rx="170" ry="55" fill="url(#cloudGradient)"/>
+  <ellipse cx="1580" cy="165" rx="160" ry="60" fill="url(#cloudGradient)"/>
+  
+  <ellipse cx="800" cy="800" rx="220" ry="70" fill="url(#cloudGradient)"/>
+  <ellipse cx="750" cy="820" rx="180" ry="60" fill="url(#cloudGradient)"/>
+  <ellipse cx="870" cy="810" rx="190" ry="65" fill="url(#cloudGradient)"/>
+  
+  <!-- Flight Path Dotted Lines -->
+  <path d="M 100 600 Q 500 400, 900 500 T 1700 600" 
+        stroke="rgba(255,255,255,0.2)" 
+        stroke-width="3" 
+        stroke-dasharray="15,15" 
+        fill="none"/>
+  
+  <path d="M 200 400 Q 600 250, 1000 350 T 1800 450" 
+        stroke="rgba(255,255,255,0.15)" 
+        stroke-width="2" 
+        stroke-dasharray="10,10" 
+        fill="none"/>
+  
+  <!-- Abstract Airplane Silhouette - Right Side -->
+  <g transform="translate(1400, 350)">
+    <!-- Plane body -->
+    <ellipse cx="0" cy="0" rx="140" ry="35" fill="url(#planeGradient)" opacity="0.7"/>
+    <!-- Wings -->
+    <ellipse cx="-20" cy="0" rx="180" ry="15" fill="url(#planeGradient)" opacity="0.6"/>
+    <!-- Tail -->
+    <path d="M -120 0 L -150 -40 L -130 0 Z" fill="url(#planeGradient)" opacity="0.6"/>
+    <path d="M -120 0 L -150 30 L -130 0 Z" fill="url(#planeGradient)" opacity="0.5"/>
+  </g>
+  
+  <!-- Smaller plane in distance -->
+  <g transform="translate(600, 250)" opacity="0.5">
+    <ellipse cx="0" cy="0" rx="80" ry="20" fill="url(#planeGradient)"/>
+    <ellipse cx="-10" cy="0" rx="100" ry="8" fill="url(#planeGradient)"/>
+    <path d="M -70 0 L -90 -25 L -75 0 Z" fill="url(#planeGradient)"/>
+  </g>
+  
+  <!-- Clock/Time Elements - Subtle -->
+  <g transform="translate(250, 850)" opacity="0.15">
+    <circle cx="0" cy="0" r="60" fill="none" stroke="white" stroke-width="3"/>
+    <line x1="0" y1="0" x2="0" y2="-40" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="25" y2="0" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Abstract Location Pin - Top Right -->
+  <g transform="translate(1700, 200)" opacity="0.2">
+    <path d="M 0 0 C -20 -20, -20 -40, 0 -60 C 20 -40, 20 -20, 0 0 Z" 
+          fill="white" stroke="white" stroke-width="2"/>
+    <circle cx="0" cy="-40" r="10" fill="#1e3a8a"/>
+  </g>
+  
+  <!-- Abstract Data/Network Lines - Bottom -->
+  <g opacity="0.1">
+    <line x1="100" y1="950" x2="400" y2="920" stroke="white" stroke-width="2"/>
+    <line x1="400" y1="920" x2="700" y2="970" stroke="white" stroke-width="2"/>
+    <line x1="700" y1="970" x2="1000" y2="940" stroke="white" stroke-width="2"/>
+    <line x1="1000" y1="940" x2="1300" y2="980" stroke="white" stroke-width="2"/>
+    <line x1="1300" y1="980" x2="1600" y2="950" stroke="white" stroke-width="2"/>
+    <line x1="1600" y1="950" x2="1850" y2="970" stroke="white" stroke-width="2"/>
+    
+    <circle cx="100" cy="950" r="6" fill="white"/>
+    <circle cx="400" cy="920" r="6" fill="white"/>
+    <circle cx="700" cy="970" r="6" fill="white"/>
+    <circle cx="1000" cy="940" r="6" fill="white"/>
+    <circle cx="1300" cy="980" r="6" fill="white"/>
+    <circle cx="1600" cy="950" r="6" fill="white"/>
+    <circle cx="1850" cy="970" r="6" fill="white"/>
+  </g>
+  
+  <!-- Subtle Light Rays from Top -->
+  <g opacity="0.08">
+    <path d="M 960 0 L 860 1080" stroke="white" stroke-width="80" fill="none"/>
+    <path d="M 960 0 L 1060 1080" stroke="white" stroke-width="80" fill="none"/>
+  </g>
+  
+  <!-- Vignette Effect -->
+  <rect width="1920" height="1080" fill="url(#vignette)"/>
+  <defs>
+    <radialGradient id="vignette">
+      <stop offset="50%" style="stop-color:#000000;stop-opacity:0" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:0.3" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Clear Center Area for Title (optional subtle rectangle) -->
+  <rect x="360" y="340" width="1200" height="400" 
+        rx="10" 
+        fill="rgba(255,255,255,0.05)" 
+        stroke="rgba(255,255,255,0.1)" 
+        stroke-width="2"/>
+</svg>

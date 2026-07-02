@@ -1,0 +1,160 @@
+So let's talk about relative
+frequency some more. We talked about
+co-occurring terms and we talked about
+relative frequencies. Now let's talk about
+relative frequencies for co-occurring terms. A very prominent task in
+text mining applications is computing the
+word co-occurrence of pairs of words in a large
+collection of documents. These co-occurrence
+counts can be converted into relative
+frequencies using order inversion--
+we've seen this before. Relative frequencies
+qualify better for tasks like document
+classification, information retrieval, search
+plagiarism detection, as they are normalized
+co-occurrence counts. Relative frequencies
+of word co-occurrences can be computed by partitioning
+and grouping of composite keys, similar to how we
+did secondary sort. So previously, we looked at
+calculating the number of times the pairs of words co-occurred. Now the goal is to calculate
+the relative frequencies of these pairs of words. In the stripes approach
+using the output from the previous section,
+it's relatively trivial to calculate all relative
+frequencies for a given word in a single pass over the data. So for each term, we
+simply sum the number of all co-occurrences
+inside the associative array and place us in the denominator. And notice that no
+shuffling is required. What about in the
+pairs approach? So how might one compute
+relative frequencies with the pairs approach? Remember that in
+the pairs approach, the reducer receives the term
+pair as the key and the count as the value. And from this alone, it's
+not possible to compute the relative frequencies since
+we don't have the marginal, the piece that goes
+in the denominator. So to make this work, we
+must define the sort order of the pair so that the keys are
+first sorted by the left word, and then by the right word. Given this ordering, we can
+easily detect if all pairs associated with the word we
+are conditioning on-- in other words, the first word-- has been encountered. Think back to our
+Hadoop word count logic. Then, in the reduce
+phase, we can go back through the
+in-memory buffer, compute the relative frequencies
+and then emit those results in the final key value pairs. So to do this, there's
+just one more modification necessary to make this work. We must ensure that all pairs
+with the same left words are sent to the same partition. And this, unfortunately, does
+not happen automatically. Recall that the default
+partition error is based on the hash value of the key. And in this case,
+the word pair modulo the number of partitions. So for a complex key, the
+role bike representation is used to compute
+the hash value. And as a result, there is no
+guarantee that, for example, dog,aardvark will end up in the
+same partition as dog,zebra. So to produce the
+desired behavior, we must first define a custom
+partitioner that pays attention only to the first word. So for example,
+we must make sure that all pairs with
+the first word dog end up in the same partition. So this will indeed work. But it still suffers from the
+same drawback as the stripes approach in that as the
+size of the corpus grows, so does the vocabulary size. And at some point there will
+not be sufficient memory to store all of the
+co-occurring words and their counts for the
+word that we are conditioning on inside our associative
+arrays and the memory buffer on the reduced side this time. So for computing the
+co-occurrence matrix, the advantage of
+the pairs approach is that it doesn't suffer
+from any memory bottlenecks. So is there a way to modify
+the basic pairs approach so that this
+advantage is retained? And as it turns out,
+such an algorithm is indeed possible, although
+it requires the coordination of several mechanisms. The insight lies in
+properly sequencing data presented to the reduce phase. If it were possible to
+somehow compute, or otherwise obtain access to, the
+marginal in the reducer before processing
+the joint counts, the reducer could simply
+divide the joint accounts by the marginal to compute
+the relative frequencies. And this notion of
+before and after can be captured in the
+ordering of the key value pairs, which can be
+explicitly controlled by us, the programmer. So to compute
+relative frequencies, we modify the mapper
+so that it additionally emits the special
+key in the form of W sub I's, this is word 1,
+and the asterisk character with a value of 1. That represents the
+contribution of that word pair to the marginal, the total
+count of co-occurring pairs with that word. And then, through
+the use of combiners, these partial
+marginal counts will be aggregated before being
+sent to the reducers. Alternatively, an
+in-mapper combining pattern can be used to even more
+efficiently aggregate marginal counts. So we always want to aim
+to emit as little data to the stream as possible. OK so let's walk through
+this code example. On the right, we have the Spark
+API calls, and on the left, we have our function
+definitions. Our data set consists
+of two sentences. So we have a data set consisting
+of the sentence dog aardvark pig banana, and the
+sentence bear zebra pig. And we want to calculate
+the relative frequencies of the co-occurring pairs
+within those sentences. So skipping the function
+definitions for a moment, our actual API calls are going
+to call the flat map function. I'm going to pass the make
+pairs function to the flat map functions such that we're
+emitting single word pairs and counts. Our reduce by key is going
+to use the add function. So we're going to be summing
+the counts of our word pairs. Then, we're going to
+pass a special partition function called
+partition by word, which is going to use only
+the first word as the key. And then the map
+partition function performs operations
+within each partition. So within each
+partition, we're going to calculate the
+relative frequencies. And this true
+parameter just says to preserve our
+partitioning scheme. The last bit here,
+glom function, just returns the values
+inside of each partition in a separate list so that we
+can see what ended up where. OK. So our make pairs function
+takes in a sentence. We're going to split the
+sentence on the space. So now we have a bunch of words. For each word pair in the
+combinations of words-- so this is just a
+place on function that computes all
+the combinations in this list of words. We're going to yield
+into the stream word one, and asterisk with a count
+of 1, as well as the word pair with a count of 1. So that's what
+our flat map does. In our reduce by
+key function, we're going to use the
+Python add function just simply to sum
+all of the values. And then our partition by
+word custom partition function is going to return the hash
+value of the first word. So this is what we're
+partitioning on. This last piece
+here, map partitions, is what does the
+bulk of the work. We're going to calculate the
+relative frequencies of all of these word pairs that have
+been emitted to the stream. So given that we have
+all of the values, we have access to all of
+the values within our map partitions per partition,
+we can sort these according to our complex key. So we're going to sort
+according to the word pair. That will ensure that
+everything with the first word and asterisk will appear
+before any other word pairs. We'll just initialize
+some values, and then we'll
+follow this pattern that we've seen lots
+of times before where, as we see words in
+the stream, we're summing up the totals first. So if the second
+word is an asterisk, we know those are the totals. So we're going to
+increment the totals. Once we see a
+different word, we're going to clear
+that and increment the next totals, and so on. And this is a pattern
+that we've seen before. In order to compute relative
+frequencies with the order inversion pattern,
+we need to make sure we're doing a few things. So first of all, we need
+to emit a special key value pair for each co-occurring
+word pair with the asterisk. We need to control the source
+order of the intermediate key so that the pairs
+representing the marginals are computed first. We define a custom
+partitioner so that the pairs where the
+first word is the same always end up in the same partition. And then, we leverage our
+good old word count design pattern from map produce to
+calculate the marginals, which we can then use to divide
+the word count pairs. Next, we'll use this pattern
+to build an inverted index. So I will see you
+in the next section.

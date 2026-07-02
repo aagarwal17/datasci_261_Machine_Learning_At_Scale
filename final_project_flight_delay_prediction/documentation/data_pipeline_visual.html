@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, initial-scale=1.0">
+    <title>Flight Delay Prediction Pipeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            width: 1920px;
+            height: 1080px;
+            padding: 60px;
+            overflow: hidden;
+        }
+        
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .title-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title {
+            font-size: 56px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 28px;
+            color: #64748b;
+        }
+        
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* Pipeline Flow */
+        .pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+        
+        .stage {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid;
+            transition: transform 0.2s;
+        }
+        
+        .stage:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .stage-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .stage-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 16px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stat-label {
+            color: #64748b;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .arrow {
+            font-size: 40px;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 3px solid;
+        }
+        
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-icon {
+            font-size: 28px;
+        }
+        
+        .metric-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .progress-bar-container {
+            margin-bottom: 20px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 16px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s;
+        }
+        
+        .feature-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 18px;
+        }
+        
+        .feature-stat:last-child {
+            border-bottom: none;
+            padding-top: 15px;
+        }
+        
+        .feature-number {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .ratio {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        /* Bottom Stats */
+        .bottom-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .bottom-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 6px solid;
+        }
+        
+        .bottom-card-label {
+            font-size: 18px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        
+        .bottom-card-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .bottom-card-detail {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+        
+        /* Color Schemes */
+        .stage-1 { border-color: #64748b; }
+        .stage-1 .stage-icon { background: #64748b; }
+        
+        .stage-2 { border-color: #3b82f6; }
+        .stage-2 .stage-icon { background: #3b82f6; }
+        .stage-2 .stat-value { color: #1e40af; }
+        
+        .stage-3 { border-color: #10b981; }
+        .stage-3 .stage-icon { background: #10b981; }
+        .stage-3 .stat-value { color: #065f46; }
+        
+        .stage-4 { border-color: #8b5cf6; }
+        .stage-4 .stage-icon { background: #8b5cf6; }
+        .stage-4 .stat-value { color: #5b21b6; }
+        
+        .stage-5 { border-color: #059669; }
+        .stage-5 .stage-icon { background: #059669; }
+        .stage-5 .stat-value { color: #065f46; }
+        
+        .class-balance { border-color: #f59e0b; }
+        .class-balance .metric-icon { color: #d97706; }
+        .class-balance .ratio { color: #d97706; }
+        
+        .feature-eng { border-color: #8b5cf6; }
+        .feature-eng .metric-icon { color: #7c3aed; }
+        .feature-eng .feature-number.final { color: #7c3aed; }
+        .feature-eng .feature-number.added { color: #10b981; }
+        .feature-eng .feature-number.removed { color: #ef4444; }
+        
+        .bg-green { background: #10b981; }
+        .bg-red { background: #ef4444; }
+        
+        .border-blue { border-color: #3b82f6; }
+        .text-blue { color: #2563eb; }
+        
+        .border-emerald { border-color: #10b981; }
+        .text-emerald { color: #059669; }
+        
+        .border-amber { border-color: #f59e0b; }
+        .text-amber { color: #d97706; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Title -->
+        <div class="title-section">
+            <div class="title">Flight Delay Prediction Pipeline</div>
+            <div class="subtitle">Data Processing & Feature Engineering Journey</div>
+        </div>
+        
+        <!-- Pipeline Flow -->
+        <div>
+            <div class="section-title">
+                📊 Data Pipeline Progression
+            </div>
+            
+            <div class="pipeline">
+                <div class="stage stage-1">
+                    <div class="stage-header">
+                        <div class="stage-icon">🗄️</div>
+                        <div class="stage-name">Raw OTPW</div>
+                    </div>
+                    <div class="stage-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Rows:</span>
+                            <span class="stat-value">5.8M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Columns:</span>
+                            <span class="stat-value">216</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Delay:</span>
+                            <span class="stat-value">18.2%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="stage stage-2">
+                    <div class="stage-header">
+                        <div class="stage-icon">🔗</div>
+                        <div class="stage-name">Joined</div>
+                    </div>
+                    <div class="stage-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Rows:</span>
+                            <span class="stat-value">7.4M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Columns:</span>
+                            <span class="stat-value">75</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Delay:</span>
+                            <span class="stat-value">18.4%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="stage stage-3">
+                    <div class="stage-header">
+                        <div class="stage-icon">🧹</div>
+                        <div class="stage-name">Cleaned</div>
+                    </div>
+                    <div class="stage-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Rows:</span>
+                            <span class="stat-value">7.3M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Columns:</span>
+                            <span class="stat-value">75</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Delay:</span>
+                            <span class="stat-value">18.6%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="stage stage-4">
+                    <div class="stage-header">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-name">Engineered</div>
+                    </div>
+                    <div class="stage-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Rows:</span>
+                            <span class="stat-value">7.3M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Columns:</span>
+                            <span class="stat-value">124</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Delay:</span>
+                            <span class="stat-value">18.6%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="stage stage-5">
+                    <div class="stage-header">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-name">Final</div>
+                    </div>
+                    <div class="stage-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Rows:</span>
+                            <span class="stat-value">7.3M</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Columns:</span>
+                            <span class="stat-value">104</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Delay:</span>
+                            <span class="stat-value">18.6%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <!-- Class Balance -->
+            <div class="metric-card class-balance">
+                <div class="metric-header">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-title">Class Balance</div>
+                </div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-info">
+                        <span class="stat-label">On-Time Flights</span>
+                        <span class="stat-value">81.4%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-green" style="width: 81.4%"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-info">
+                        <span class="stat-label">Delayed Flights</span>
+                        <span class="stat-value">18.6%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-red" style="width: 18.6%"></div>
+                    </div>
+                </div>
+                
+                <div style="padding-top: 15px; border-top: 2px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="stat-label" style="font-size: 18px;">Imbalance Ratio:</span>
+                        <span class="ratio">4.37:1</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature Engineering -->
+            <div class="metric-card feature-eng">
+                <div class="metric-header">
+                    <div class="metric-icon">⚙️</div>
+                    <div class="metric-title">Feature Engineering</div>
+                </div>
+                
+                <div class="feature-stat">
+                    <span class="stat-label">Original Features:</span>
+                    <span class="feature-number">75</span>
+                </div>
+                
+                <div class="feature-stat">
+                    <span class="stat-label">Engineered Features:</span>
+                    <span class="feature-number added">+29</span>
+                </div>
+                
+                <div class="feature-stat">
+                    <span class="stat-label">Features Removed:</span>
+                    <span class="feature-number removed">-20</span>
+                </div>
+                
+                <div class="feature-stat">
+                    <span class="stat-label" style="font-weight: 600;">Final Count:</span>
+                    <span class="feature-number final">104</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Stats -->
+        <div class="bottom-stats">
+            <div class="bottom-card border-blue">
+                <div class="bottom-card-label">Data Quality</div>
+                <div class="bottom-card-value text-blue">High</div>
+                <div class="bottom-card-detail">
+                    163K rows cleaned (2.2%)<br>
+                    0 nulls remaining
+                </div>
+            </div>
+            
+            <div class="bottom-card border-emerald">
+                <div class="bottom-card-label">Data Sources</div>
+                <div class="bottom-card-value text-emerald">2 Sources</div>
+                <div class="bottom-card-detail">
+                    BTS + NOAA Weather<br>
+                    12 months (2015)
+                </div>
+            </div>
+            
+            <div class="bottom-card border-amber">
+                <div class="bottom-card-label">⚠️ Requires</div>
+                <div class="bottom-card-value text-amber">Imbalance Handling</div>
+                <div class="bottom-card-detail">
+                    SMOTE, class weights,<br>
+                    or sampling strategies
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

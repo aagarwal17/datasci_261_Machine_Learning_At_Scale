@@ -1,0 +1,168 @@
+Let's talk about
+the inverted index. So previously, we
+talked about calculating relative frequencies
+for co-occurring terms. In this section, we'll see how
+to calculate similarity scores between co-occurring terms. And we'll introduce the
+idea of the inverted index. In its basic form,
+the inverted index consists of postings lists, one
+associated with each term that appears in the collection. And a postings list is comprised
+of individual postings, each of which consists of a
+document ID and a payload. So the payload is
+information about occurrences of the term in the document. The simplest payload is nothing. For simple Boolean retrieval,
+no additional information is needed in the posting
+other than the document ID. The existence of
+the posting itself indicates the presence of
+the term in the document. So the most common
+payload, however, is the term frequency,
+or the number of times that the term occurs
+in the document. So I might have a
+term and a posting where d1 represents the
+ID of the document and p here represents
+the number of times that that term occurs
+in the document. The size of an
+inverted index varies. So depending on the payload
+stored in each posting, obviously. And if the term
+frequency is stored, a well-optimized inverted
+index can be about 1/10 of the size of the original
+document collection. Obviously, the more additional
+information you store, the larger this becomes. Generally, it is possible to
+hold the entire vocabulary in memory. So the original, and probably
+the most common, application of the inverted index is in
+the context of information retrieval, as just discussed. However, the inverted
+index data structure itself can be very useful
+for algorithm design at scale in our
+MapReduce-type framework. And we'll be focusing on
+similarity calculations for the rest of this section. Some examples of
+similarity measures used in machine
+learning are things like earth mover's
+distance, cosine similarity, Euclidean distance,
+Jaccard, overlap, dice. All these are sensitive to
+different aspects of the data. In machine learning,
+cosine similarity is often used in applications
+such as data mining and information retrieval. So for example, a
+database of documents can be processed such
+that each term is assigned a dimension and an associated
+vector corresponding to the frequency of that
+term in the document. And this allows for a cosine
+similarity measurement to distinguish and
+compare documents based on their vectors
+to each other based on their similarities and
+overlap in subject matter. So what is cosine similarity? Cosine similarity
+measures the sine of the angle between
+two non-zero vectors of the inner product space. This similarity measurement
+is particularly concerned with orientation
+rather than magnitude. So in short, two
+cosine vectors that are aligned in the
+same orientation will have a similarity
+measurement of 1, whereas two vectors
+aligned perpendicularly you will have a similarity of 0. If two vectors are
+diametrically opposed, meaning that they are
+oriented in exactly the opposite directions,
+back-to-back, then the similarity
+measurement is negative 1. Cosine similarity is not
+concerned and does not measure differences
+in magnitude, i.e. the length of the vectors. It is only a representation of
+similarities and orientation. So word similarity
+and dissimilarity is measured to be a
+cosine similarity, which has a very nice property of
+being between negative 1 and 1. And perfect similarity
+between two words will yield a score of 1. So these are vectors pointing
+in the same direction. No correlation will yield 0. So perpendicular vectors,
+which can be seen in the figure in the middle. And negative 1 means that
+they mean opposite things. You've probably heard of
+Word2Vec as word embeddings as vectors. So cosine similarity is most
+often used with Word2Vec. Regardless, though, of
+how we generate them, once the words are
+represented by vectors, the task of finding
+similar or dissimilar words becomes a lot easier. So any combination of vectors
+result in a new vector. And the cosine distances
+or similarity measures can be used to
+calculate similarities between these words. These operations underlie
+the famous equation king minus man plus
+woman equals queen. Just a note that cosine
+similarity function for the Word2Vec algorithm, just
+a CBO implementation in Spark, is already baked
+into MLlib if you want to use that in the future. We're not actually going
+to implement Word2Vec here. However, we'll use
+cosine similarity to measure similarity
+between word pairs based on the intuition
+that if two words occur in similar contexts
+enough times, then these words are similar. So here's a simple example. We have the sentence "one should
+wear business attire to work" and the sentence
+"one should wear business clothing to work." Because both attire and
+clothing are surrounded by the same words, i.e.
+they're in the same context, we can infer that attire
+is similar to clothing. Now, a single
+example isn't going to be particularly informative. However, if attire and clothing
+appear in similar context enough times, we can infer that
+they are similar in meaning. All right, so how do we go
+about computing these at scale? So let's first
+consider how we're going to define the context. Let's say that the context
+is a five-word window with two words on the left
+and two words on the right. In other words, we can say
+that the word attire co-occurs with the words wear,
+business, to, and work. So that's the
+context for attire-- wear, business, to, and work. Next, we'll want to represent
+these co-occurrences in a data structure that will
+be amenable for computation. OK, so we can construct
+a binary matrix where the columns are the words
+from our chosen vocabulary. And you can think of these
+as the features to our model. So here, f1, f2, and
+f3 represent words within our vocabulary. The rows are the
+words from the corpus. So these are words that
+appear in our training data. And an entry of 1
+indicates that the words co-occur in a five-word window,
+and a 0 that they do not. So this will inevitably
+result in a very sparse matrix with many 0's, which
+wastes a lot of disk space. So a more compact
+representation, like the stripes on the
+right is a better format, especially when
+working at scale. For the sake of simplicity
+of this example, we'll say that words which
+share the most features are most similar. So just a note here that
+this is not cosine similarity that we're calculating here. In order to calculate
+cosine similarity, we would also need to
+include some other pieces of information, which would
+just obscure our example. So bear with me for
+the moment while I explain kind of the intuition
+behind the algorithm. So in our small example,
+the words wear and attire have two features
+in common, right? Wear and entire share feature 1,
+and they also share feature 3. So we're saying that the number
+of features in common is 2. Wear and business share
+a single peak feature. So they both share f2. Hence, their score is 1. Notice that in order to
+count the number of features in common, we need access
+to both all of the rows as well as all of the columns. And as you can imagine,
+doing this in memory on a very large data
+set is not tractable. So can we do this in parallel? Remember our stripes
+data structure from a couple of slides ago. Imagine that each stripe
+resides on its own block. And thus, by default, we
+have three tasks which should be executed in parallel. A brute force
+approach is possible. But given that each task has no
+knowledge of any other task-- so in other words, they're
+being computed completely independently-- in order
+to bring this information together, we would
+need to do some pretty fancy footwork in how we design
+our keys, our complex keys. But more importantly, we'd
+be emitting a lot of data to the stream that is
+redundant, potentially causing expensive spills
+to memory or even to disk. It turns out that
+there is another way. And of course, you
+knew this was coming. And this is the inverted index. So the inverted
+index is nothing more than a stripes representation
+of the transpose of our original matrix. This time, the words which
+share a feature reside on the same partition. So now our keys
+are the features, and the words that
+share the feature are listed in the stripe. Each task outputs its own
+word pair combinations. And reduce phase can simply
+aggregate these pairs by doing a simple sum. No unnecessary data is
+emitted into the stream. And the algorithm
+has a simplicity that is a welcome departure
+from the potentially complex and error-prone
+composite keys and values from the previous approach. So to calculate actual
+cosine similarities, we'll need to pass along
+some additional information in the payloads
+from our mappers. But the principle of
+transposing the original matrix to make this computationally
+feasible remains the same. And you will be implementing
+this notion in your homework.

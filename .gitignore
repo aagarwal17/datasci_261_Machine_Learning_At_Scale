@@ -1,0 +1,25 @@
+# Large archives / source
+*.tar.gz
+*.tgz
+*.zip
+
+# Data files (too large)
+*.csv
+*.json
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Render formats (notebooks are the source)
+*.dbc
+
+# Large text data outputs
+*.txt.output

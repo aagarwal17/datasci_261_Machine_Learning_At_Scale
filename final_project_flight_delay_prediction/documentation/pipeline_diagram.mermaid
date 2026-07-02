@@ -1,0 +1,29 @@
+graph TB
+    Start[["<b>RAW DATA</b><br/>━━━━━━━━━━━━━━━<br/>• Flights<br/>• Airport Codes<br/>• Weather (NOAA)<br/>• Station Metadata"]]
+    
+    Phase1[["<b>PHASE 1: JOINED DATA</b><br/>━━━━━━━━━━━━━━━━━━━━━<br/>• Unified airport dimension with timezones & coordinates<br/>• Weather station dimension with geolocation<br/>• Airport-to-station bridge (top 3 nearest)<br/>• Time alignment (local → UTC)<br/>• Enriched views with origin/dest weather"]]
+    
+    Phase2[["<b>PHASE 2: DATA CLEANING</b><br/>━━━━━━━━━━━━━━━━━━━━━━━<br/>• Type casting & standardization<br/>• Remove duplicates, canceled/diverted flights<br/>• Handle missing values (median imputation)<br/>• Drop leakage features<br/>• Convert target to binary"]]
+    
+    Phase3[["<b>PHASE 3: FEATURE ENGINEERING</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Temporal:</b> Hour, Day, Month, Season, Day-Hour Interaction,<br/>Holiday Window, Cyclic Encoding<br/><br/><b>Flight Volume:</b> Daily Origin Volume, Rolling 24h/30-Day,<br/>Route-Specific, Airport Hourly Traffic Density<br/><br/><b>Historical Performance:</b> 1-Year Delay Rates, Prior Day<br/>Delay Rate, Same-Day Performance, Congestion Patterns<br/><br/><b>Aircraft:</b> Lag-Based Features (Previous Flight)<br/><br/><b>Congestion:</b> 2-Hour Window Airport Congestion<br/><br/><b>Weather:</b> Severity Score, Extreme Indicators, Weighted Score,<br/>Heat Index, Rapid Changes, Seasonal Anomalies, Rain Indicator,<br/>Sky Conditions Parsed<br/><br/><b>Route/Network:</b> Log Distance, Degree Centrality, PageRank,<br/>Carrier Quality Stats, Carrier Frequency"]]
+    
+    Phase4[["<b>PHASE 4: FEATURE SELECTION</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━<br/>• Correlation analysis (feature-feature & feature-target)<br/>• Remove highly correlated pairs (>0.95)<br/>• ANOVA, Chi-squared, Pearson/Spearman tests<br/>• Cardinality analysis & encoding recommendations<br/>• Remove redundant & problematic features"]]
+    
+    Phase5[["<b>PHASE 5: DATA READINESS FOR MODEL</b><br/>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br/><b>Scaling:</b> Min-max normalization, robust scaling,<br/>standard scaler (training only)<br/><br/><b>Encoding:</b><br/>• One-hot: 8 features → 33 dummies<br/>• Target encoding: 6 high-cardinality features<br/><br/><b>Class Balance:</b> Undersampled majority class<br/>(~80% on-time → balanced)"]]
+    
+    End[["<b>MODEL-READY DATA</b><br/>━━━━━━━━━━━━━━━━━"]]
+    
+    Start --> Phase1
+    Phase1 --> Phase2
+    Phase2 --> Phase3
+    Phase3 --> Phase4
+    Phase4 --> Phase5
+    Phase5 --> End
+    
+    classDef startStyle fill:#e1f5ff,stroke:#0077b6,stroke-width:3px,color:#000
+    classDef phaseStyle fill:#f0f7ff,stroke:#4a90e2,stroke-width:2px,color:#000
+    classDef endStyle fill:#d4edda,stroke:#28a745,stroke-width:3px,color:#000
+    
+    class Start startStyle
+    class Phase1,Phase2,Phase3,Phase4,Phase5 phaseStyle
+    class End endStyle
